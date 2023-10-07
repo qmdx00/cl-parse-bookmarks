@@ -24,23 +24,23 @@
 (defmethod list-bookmarks ()
   (dolist (bookmark *bookmarks-db*)
     (format t
-	    "Title: ~A~%URL: ~A~%Icon: ~A~%Date: ~A~%~%"
-	    (title bookmark) (url bookmark) (icon bookmark) (add-date bookmark))))
+            "Title: ~A~%URL: ~A~%Icon: ~A~%Date: ~A~%~%"
+            (title bookmark) (url bookmark) (icon bookmark) (add-date bookmark))))
 
 (defun parse-bookmarks-from-html (path)
   (let* ((content (uiop:read-file-string (pathname path)))
-	 (body (html5-parser:parse-html5 content :dom :xmls-ns))
-	 (node (nth 4 (nth 3 body))))
+         (body (html5-parser:parse-html5 content :dom :xmls-ns))
+         (node (nth 4 (nth 3 body))))
     (find-dom-tag node #'(lambda (node)
-			   (push (make-instance 'bookmark
-						:title (nth 2 node)
-						:url (nth 1 (nth 0 (nth 1 node)))
-						:icon (nth 1 (nth 2 (nth 1 node)))
-						:add-date (local-time:unix-to-timestamp
-							   (parse-integer
-							    (nth 1 (nth 1 (nth 1 node))))))
-				 *bookmarks-db*))
-		  "a")))
+                           (push (make-instance 'bookmark
+                                                :title (nth 2 node)
+                                                :url (nth 1 (nth 0 (nth 1 node)))
+                                                :icon (nth 1 (nth 2 (nth 1 node)))
+                                                :add-date (local-time:unix-to-timestamp
+                                                           (parse-integer
+                                                            (nth 1 (nth 1 (nth 1 node))))))
+                                 *bookmarks-db*))
+                  "a")))
 
 (defun find-dom-tag (node fn tag)
   (unless (null node)
@@ -48,5 +48,4 @@
       (find-dom-tag (car node) fn tag)
       (find-dom-tag (cdr node) fn tag)
       (when (equal (car node) tag)
-	(funcall fn node)))))
-
+        (funcall fn node)))))
