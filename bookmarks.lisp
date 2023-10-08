@@ -1,5 +1,16 @@
-(ql:quickload :cl-html5-parser)
+(in-package :cl-user)
+
 (ql:quickload :local-time)
+(ql:quickload :cl-html5-parser)
+
+(defpackage cl-chrome-bookmarks
+  (:use :cl
+        :uiop)
+  (:export :list-bookmarks
+           :parse-bookmarks-from-html))
+
+(in-package :cl-chrome-bookmarks)
+
 
 (defvar *bookmarks-db* nil)
 
@@ -28,7 +39,7 @@
             (title bookmark) (url bookmark) (icon bookmark) (add-date bookmark))))
 
 (defun parse-bookmarks-from-html (path)
-  (let* ((content (uiop:read-file-string (pathname path)))
+  (let* ((content (read-file-string (pathname path)))
          (body (html5-parser:parse-html5 content :dom :xmls-ns))
          (node (nth 4 (nth 3 body))))
     (find-dom-tag node #'(lambda (node)
