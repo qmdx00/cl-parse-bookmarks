@@ -3,60 +3,82 @@
 (ql:quickload :local-time)
 (ql:quickload :cl-html5-parser)
 
-(defpackage cl-chrome-bookmarks
+(defpackage :cl-chrome-bookmarks
   (:use :cl
-        :uiop)
-  (:export :list-bookmarks
-           :parse-bookmarks-from-html))
+	:local-time
+        :html5-parser)
+  (:export :parse-bookmarks-from-html
+	   :list-bookmark-items))
 
 (in-package :cl-chrome-bookmarks)
-
-
-(defvar *bookmarks-db* nil)
 
 (defclass bookmark ()
   ((title
     :accessor title
     :initarg :title
-    :documentation "Bookmark Title")
+    :documentation "bookmark title")
    (url
     :accessor url
     :initarg :url
-    :documentation "Bookmark URL")
+    :documentation "bookmark URL")
    (icon
     :accessor icon
     :initarg :icon
-    :documentation "Bookmark Icon")
+    :documentation "bookmark icon")
    (add-date
     :accessor add-date
     :initarg :add-date
-    :documentation "Bookmark Add Date")))
+    :documentation "bookmark add date")))
 
-(defmethod list-bookmarks ()
-  (dolist (bookmark *bookmarks-db*)
-    (format t
-            "Title: ~A~%URL: ~A~%Icon: ~A~%Date: ~A~%~%"
-            (title bookmark) (url bookmark) (icon bookmark) (add-date bookmark))))
+(defvar *bookmark-items* ()
+  "bookmarks instances list")
 
-(defun parse-bookmarks-from-html (path)
-  (let* ((content (read-file-string (pathname path)))
-         (body (html5-parser:parse-html5 content :dom :xmls-ns))
-         (node (nth 4 (nth 3 body))))
-    (find-dom-tag node #'(lambda (node)
-                           (push (make-instance 'bookmark
-                                                :title (nth 2 node)
-                                                :url (nth 1 (nth 0 (nth 1 node)))
-                                                :icon (nth 1 (nth 2 (nth 1 node)))
-                                                :add-date (local-time:unix-to-timestamp
-                                                           (parse-integer
-                                                            (nth 1 (nth 1 (nth 1 node))))))
-                                 *bookmarks-db*))
-                  "a")))
+(defun list-bookmark-items ()
+  "list bookmarks with title ,url and add-date attributes"
+  (dolist (item *bookmark-items*)
+    (format t "Title: ~A~%URL: ~A~%Date: ~A~%~%"
+	    (title item)
+	    (url item)
+	    (add-date item))))
 
-(defun find-dom-tag (node fn tag)
-  (unless (null node)
-    (when (listp node)
-      (find-dom-tag (car node) fn tag)
-      (find-dom-tag (cdr node) fn tag)
-      (when (equal (car node) tag)
-        (funcall fn node)))))
+(defun parse-bookmarks-from-html (html-path)
+  "parse exported chrome bookmarks html file"
+  (let* ((content (uiop:read-file-string (pathname html-path)))
+	 (body (parse-html5 content)))
+    (traverse-nodes #'standard-recurse-p #'convert-to-bookmark body)))
+
+(defun traverse-nodes (recurse-p fn node)
+  "fn is applied to each visited node
+   recurse-p controls whether to visit the children of node"
+  (if node
+      (progn
+	(funcall fn node)
+	(if (funcall recurse-p node)
+	    (element-map-children
+	     (lambda (n-node)
+	       (traverse-nodes recurse-p fn n-node))
+	     node)))))
+
+(defun convert-to-bookmark (node)
+  "visit node and convert attributes to make bookmark instance"
+  (when (equal (node-name node) "a")
+    (let ((title (node-value
+		  (node-first-child node)))
+	  (url (element-attribute node "href"))
+	  (icon (element-attribute node "icon"))
+	  (add-date (element-attribute node "add_date")))
+      (format t "~A~%" title)
+      (push (make-instance 'bookmark
+			   :title title
+			   :url url
+			   :icon icon
+			   :add-date (local-time:unix-to-timestamp
+				      (parse-integer add-date)))
+	    *bookmark-items*))))
+
+(defun standard-recurse-p (node)
+  "returns true only if you aren't trying to recurse into a script,
+  style, or noscript tag."
+  (not (or (equalp (node-name node) "script")
+	   (equalp (node-name node) "style")
+	   (equalp (node-name node) "noscript"))))
