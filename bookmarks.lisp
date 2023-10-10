@@ -8,7 +8,8 @@
 	:local-time
         :html5-parser)
   (:export :parse-bookmarks-from-html
-	   :list-bookmark-items))
+	   :list-bookmark-items
+	   :save-bookmark-items))
 
 (in-package :cl-chrome-bookmarks)
 
@@ -40,6 +41,17 @@
 	    (title item)
 	    (url item)
 	    (add-date item))))
+
+(defun save-bookmark-items (filepath)
+  (with-open-file (out (pathname filepath) :direction :output
+					   :if-exists :supersede)
+    (with-standard-io-syntax
+      (dolist (item *bookmark-items*)
+	(print (list :title (title item)
+		     :url (url item)
+		     :icon (icon item)
+		     :add-date (add-date item))
+	       out)))))
 
 (defun parse-bookmarks-from-html (html-path)
   "parse exported chrome bookmarks html file"
