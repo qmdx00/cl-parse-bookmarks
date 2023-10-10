@@ -15,5 +15,11 @@ Parse Google Chrome Bookmarks
 3. Get the bookmarks instance.
 
 ```lisp
-(list-bookmarks)
+(list-bookmark-items)
+```
+
+4. Save the bookmark items to file.
+
+```lisp
+(save-bookmark-items)
 ```

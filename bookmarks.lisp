@@ -43,6 +43,7 @@
             (add-date item))))
 
 (defun save-bookmark-items (filepath)
+  "save bookmark lists to a file"
   (with-open-file (out (pathname filepath) :direction :output
                                            :if-exists :supersede)
     (with-standard-io-syntax
