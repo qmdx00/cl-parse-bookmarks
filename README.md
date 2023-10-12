@@ -4,22 +4,28 @@ Parse Google Chrome Bookmarks
 
 #### Useage
 
-1. Export your Chrome Bookmarks to html.
+1. Export your Chrome Bookmarks to html file.
 
-2. Read bookmarks html file.
+2. Install asdf package.
 
 ```lisp
-(parse-bookmarks-from-html "bookmarks.html")
+(asdf:load-system :cl-parse-bookmarks)
 ```
 
-3. Get the bookmarks instance.
+3. Read bookmarks html file.
 
 ```lisp
-(list-bookmark-items)
+(cl-parse-bookmarks:parse-bookmarks-from-html "bookmarks.html")
 ```
 
-4. Save the bookmark items to file.
+4. Get the bookmarks instance.
 
 ```lisp
-(save-bookmark-items)
+(cl-parse-bookmarks:list-bookmark-items)
+```
+
+5. Save the bookmark items to file.
+
+```lisp
+(cl-parse-bookmarks:save-bookmark-items "bookmarks.db")
 ```
