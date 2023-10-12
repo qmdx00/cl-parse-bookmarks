@@ -1,17 +1,4 @@
-(in-package :cl-user)
-
-(ql:quickload :local-time)
-(ql:quickload :cl-html5-parser)
-
-(defpackage :cl-chrome-bookmarks
-  (:use :cl
-        :local-time
-        :html5-parser)
-  (:export :parse-bookmarks-from-html
-           :list-bookmark-items
-           :save-bookmark-items))
-
-(in-package :cl-chrome-bookmarks)
+(in-package #:cl-parse-bookmarks)
 
 (defclass bookmark ()
   ((title
@@ -33,6 +20,9 @@
 
 (defvar *bookmark-items* ()
   "bookmarks instances list")
+
+
+;; external interface
 
 (defun list-bookmark-items ()
   "list bookmarks with title ,url and add-date attributes"
@@ -59,6 +49,9 @@
   (let* ((content (uiop:read-file-string (pathname html-path)))
          (body (parse-html5 content)))
     (traverse-nodes #'standard-recurse-p #'convert-to-bookmark body)))
+
+
+;; internal
 
 (defun traverse-nodes (recurse-p fn node)
   "fn is applied to each visited node
